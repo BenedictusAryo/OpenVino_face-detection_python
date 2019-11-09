@@ -8,14 +8,40 @@ Created on Wed Oct  16 10:14:14 2019
 #######################################################################
 ######################  Library Initialization  #########################
 #  Import Library being used in program
-import time
-import argparse
 import platform
-if __name__ == '__main__':
-    import os
-    os.system('setupvars')
-    from openvino.inference_engine import IENetwork, IEPlugin
+import argparse
+import time
+OPENVINO_DIR = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+# if platform.os.environ.get('PATH').find('openvino') != -1:
+#     platform.subprocess.run('setupvars.bat')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\python\\python3.7')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\python\\python3.7\\openvino\\inference_engine')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\python\\python3')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\opencv\\cmake')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\openvx')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\share')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\external\\hddl')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\external\\hddl\\bin')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\bin\\intel64\\Release')
+platform.sys.path.append(
+    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\bin\\intel64\\Debug')
+
+# platform.sys.path.append('C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker')
+if platform.os.environ.get('PATH').find('openvino') != -1:
     import cv2 as cv
+    # import openvino
+    from openvino.inference_engine import IENetwork, IEPlugin
+else:
+    print('OpenVINO Setupvars is not in your path')
 
 #####################  Argument Parser  ################################
 parser = argparse.ArgumentParser(description="OpenVINO Face Detection")
