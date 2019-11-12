@@ -11,29 +11,15 @@ Created on Wed Oct  16 10:14:14 2019
 import platform
 import argparse
 import time
+import os
 OPENVINO_DIR = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
 # if platform.os.environ.get('PATH').find('openvino') != -1:
 #     platform.subprocess.run('setupvars.bat')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\python\\python3.7')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\python\\python3.7\\openvino\\inference_engine')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\python\\python3')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\opencv\\cmake')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\openvx')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\share')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\external\\hddl')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\external\\hddl\\bin')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\bin\\intel64\\Release')
-platform.sys.path.append(
-    OPENVINO_DIR+'\\deployment_tools\\inference_engine\\bin\\intel64\\Debug')
+os.environ['PYTHONPATH'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;'
+os.environ['INTEL_OPENVINO_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+os.environ['INTEL_CVSDK_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+os.environ['OpenCV_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\opencv\\cmake'
+
 
 # platform.sys.path.append('C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker')
 if platform.os.environ.get('PATH').find('openvino') != -1:
@@ -76,3 +62,18 @@ else:
 # Add Extension to Device Plugin
 if device == "CPU":
     plugin.add_cpu_extension(cpu_plugin)
+
+#################### no need for GPU or MYRIAD ########################
+#######################################################################
+
+#######################  MODEL INITIALIZATION  ########################
+#  Prepare and load the models
+
+# Model 1: Face Detection
+# FACEDETECT_XML = "models/face-detection-retail-0004.xml"
+# FACEDETECT_BIN = "models/face-detection-retail-0004.bin"
+FACEDETECT_XML = "models/face-detection-adas-0001.xml"
+FACEDETECT_BIN = "models/face-detection-adas-0001.bin"
+# Model 2: Age Gender Recognition
+AGEGENDER_XML = "models/age-gender-recognition-retail-0013_FP32.xml"
+AGEGENDER_BIN = "models/age-gender-recognition-retail-0013_FP32.bin"
