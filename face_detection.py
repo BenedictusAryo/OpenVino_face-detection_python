@@ -11,23 +11,36 @@ Created on Wed Oct  16 10:14:14 2019
 import platform
 import argparse
 import time
-import os
-OPENVINO_DIR = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+
+try:
+    from openvino.inference_engine import IENetwork, IEPlugin
+    import cv2 as cv
+except:
+    raise Exception("""
+OpenVINO not found in your environment.
+
+in Windows: run OPENVINO_DIR/bin/setupvars.bat before run this script.
+in Ubuntu: put this on your .bashrc files: 
+    source /opt/intel/openvino/bin/setupvars.sh
+           then run the script again.""")
+
+
+# OPENVINO_DIR = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
 # if platform.os.environ.get('PATH').find('openvino') != -1:
 #     platform.subprocess.run('setupvars.bat')
-os.environ['PYTHONPATH'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;'
-os.environ['INTEL_OPENVINO_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
-os.environ['INTEL_CVSDK_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
-os.environ['OpenCV_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\opencv\\cmake'
+# os.environ['PYTHONPATH'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;'
+# os.environ['INTEL_OPENVINO_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+# os.environ['INTEL_CVSDK_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
+# os.environ['OpenCV_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\opencv\\cmake'
 
 
-# platform.sys.path.append('C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker')
-if platform.os.environ.get('PATH').find('openvino') != -1:
-    import cv2 as cv
-    # import openvino
-    from openvino.inference_engine import IENetwork, IEPlugin
-else:
-    print('OpenVINO Setupvars is not in your path')
+# # platform.sys.path.append('C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker')
+# if platform.os.environ.get('PATH').find('openvino') != -1:
+#     import cv2 as cv
+#     # import openvino
+#     from openvino.inference_engine import IENetwork, IEPlugin
+# else:
+#     print('OpenVINO Setupvars is not in your path')
 
 #####################  Argument Parser  ################################
 parser = argparse.ArgumentParser(description="OpenVINO Face Detection")
@@ -77,3 +90,23 @@ FACEDETECT_BIN = "models/face-detection-adas-0001.bin"
 # Model 2: Age Gender Recognition
 AGEGENDER_XML = "models/age-gender-recognition-retail-0013_FP32.xml"
 AGEGENDER_BIN = "models/age-gender-recognition-retail-0013_FP32.bin"
+
+################  Create PostProcessing Inferece Function  ################
+
+
+def gender_class(gender):
+    """
+    PostProcessing & Classify Output Gender into Male & Female
+    """
+    GENDER_LIST = ['Female', 'Male']
+    if gender[0, 1, 0, 0] >= 0.60:
+        return GENDER_LIST[1]
+    else:
+        return GENDER_LIST[0]
+
+
+def age_class(age):
+    """
+    Classify Age whether it's below or above 30
+    """
+    return 'Below 30' if age <= 30 else 'Above 30'
