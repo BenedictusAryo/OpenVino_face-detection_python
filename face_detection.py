@@ -19,28 +19,11 @@ except:
     raise Exception("""
 OpenVINO not found in your environment.
 
+After install OpenVINO:
 in Windows: run OPENVINO_DIR/bin/setupvars.bat before run this script.
 in Ubuntu: put this on your .bashrc files: 
     source /opt/intel/openvino/bin/setupvars.sh
            then run the script again.""")
-
-
-# OPENVINO_DIR = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
-# if platform.os.environ.get('PATH').find('openvino') != -1:
-#     platform.subprocess.run('setupvars.bat')
-# os.environ['PYTHONPATH'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3.7;C:\\Program Files (x86)\\IntelSWTools\\openvino\\python\\python3;'
-# os.environ['INTEL_OPENVINO_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
-# os.environ['INTEL_CVSDK_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino'
-# os.environ['OpenCV_DIR'] = 'C:\\Program Files (x86)\\IntelSWTools\\openvino\\opencv\\cmake'
-
-
-# # platform.sys.path.append('C:\\Program Files (x86)\\IntelSWTools\\openvino\\deployment_tools\\open_model_zoo\\tools\\accuracy_checker')
-# if platform.os.environ.get('PATH').find('openvino') != -1:
-#     import cv2 as cv
-#     # import openvino
-#     from openvino.inference_engine import IENetwork, IEPlugin
-# else:
-#     print('OpenVINO Setupvars is not in your path')
 
 #####################  Argument Parser  ################################
 parser = argparse.ArgumentParser(description="OpenVINO Face Detection")
@@ -53,7 +36,7 @@ parser.add_argument("-s", "--sample", default=False,
 
 args = parser.parse_args()
 
-#######################  Device  Initialization  ########################
+#######################  DEVICE INITIALIZATION  ########################
 #  Plugin initialization for specified device and load extensions library if specified
 
 device = args.device.upper()
@@ -82,37 +65,28 @@ if device == "CPU":
 #######################  MODEL INITIALIZATION  ########################
 #  Prepare and load the models
 
-# Model 1: Face Detection
-# FACEDETECT_XML = "models/face-detection-retail-0004.xml"
-# FACEDETECT_BIN = "models/face-detection-retail-0004.bin"
+# Model : Face Detection
 FACEDETECT_XML = "models/face-detection-adas-0001.xml"
 FACEDETECT_BIN = "models/face-detection-adas-0001.bin"
-# Model 2: Age Gender Recognition
-AGEGENDER_XML = "models/age-gender-recognition-retail-0013_FP32.xml"
-AGEGENDER_BIN = "models/age-gender-recognition-retail-0013_FP32.bin"
-
-################  Create PostProcessing Inferece Function  ################
 
 
-def gender_class(gender):
+#######################  IMAGE PREPROCESSING  ########################
+# Input Image Preprocessing
+def image_preprocessing(image, n, c, h, w):
     """
-    PostProcessing & Classify Output Gender into Male & Female
+    Image Preprocessing steps, to match image 
+    with Input Neural nets
+
+    Image,
+    N, Channel, Height, Width
     """
-    GENDER_LIST = ['Female', 'Male']
-    if gender[0, 1, 0, 0] >= 0.60:
-        return GENDER_LIST[1]
-    else:
-        return GENDER_LIST[0]
+    blob = cv.resize(image, (w, h))  # Resize width & height
+    blob = blob.transpose((2, 0, 1))  # Change data layout from HWC to CHW
+    blob = blob.reshape((n, c, h, w))
+    return blob
 
+#########################  LOAD NEURAL NETWORK  ########################
 
-def age_class(age):
-    """
-    Classify Age whether it's below or above 30
-    """
-    return 'Below 30' if age <= 30 else 'Above 30'
-
-
-#########################  Load Neural Network  #########################
 
 def load_model(plugin, model, weights):
     """
@@ -133,8 +107,77 @@ def load_model(plugin, model, weights):
     return net, exec_net
 
 
-####################  Create Execution Network  #######################
+####################  CREATE EXECUTION NETWORK  #######################
 net_facedetect, exec_facedetect = load_model(
     plugin, FACEDETECT_XML, FACEDETECT_BIN)
-net_ageGender, exec_ageGender = load_model(
-    plugin, AGEGENDER_XML, AGEGENDER_BIN)
+
+#################  OBTAIN INPUT & OUTPUT TENSOR  ######################
+# Face Detection Model
+#  Define Input&Output Network dict keys
+FACEDETECT_INPUTKEYS = 'data'
+FACEDETECT_OUTPUTKEYS = 'detection_out'
+#  Obtain image_count, channels, height and width
+n_facedetect, c_facedetect, h_facedetect, w_facedetect = net_facedetect.inputs[
+    FACEDETECT_INPUTKEYS].shape
+
+
+#########################  READ VIDEO CAPTURE  ########################
+#  Using OpenCV to read Video/Camera
+#  Use 0 for Webcam, 1 for External Camera, or string with filepath for video
+if args.sample:
+    input_stream = 'face-demographics-walking-and-pause.mp4'
+else:
+    input_stream = args.camera
+
+cap = cv.VideoCapture(input_stream)
+
+#  If Video File, slow down the video playback based on FPS
+if type(input_stream) is str:
+    time.sleep(1/cap.get(cv.CAP_PROP_FPS))
+
+while cv.waitKey(1) != ord('q'):
+    if cap:
+        hasFrame, image = cap.read()
+
+    if not hasFrame:
+        break
+
+    ###################  Start  Inference Face Detection  ###################
+    #  Start asynchronous inference and get inference result
+    blob = image_preprocessing(
+        image, n_facedetect, c_facedetect, h_facedetect, w_facedetect)
+    req_handle = exec_facedetect.start_async(
+        request_id=0, inputs={FACEDETECT_INPUTKEYS: blob})
+
+    ######################## Get Inference Result  #########################
+    status = req_handle.wait()
+    res = req_handle.outputs[FACEDETECT_OUTPUTKEYS]
+
+    # Get Bounding Box Result
+    for detection in res[0][0]:
+        confidence = float(detection[2])  # Face detection Confidence
+        # Obtain Bounding box coordinate, +-10 just for padding
+        xmin = int(detection[3] * image.shape[1] - 10)
+        ymin = int(detection[4] * image.shape[0] - 10)
+        xmax = int(detection[5] * image.shape[1] + 10)
+        ymax = int(detection[6] * image.shape[0] + 10)
+
+        # OpenCV Drawing Set Up
+        font = cv.FONT_HERSHEY_SIMPLEX
+        fontColor = (0, 0, 255)
+        bottomLeftCornerOfText = (xmin, ymin-10)
+        fontScale = 0.6
+        lineType = 1
+
+        cv.putText(image, "press 'q' to exit", (4, 20),
+                   font, fontScale, fontColor, lineType)
+
+        # Crop Face which having confidence > 90%
+        if confidence > 0.9:
+            # Draw Boundingbox
+            cv.rectangle(image, (xmin, ymin), (xmax, ymax), fontColor)
+
+    cv.namedWindow('OpenVINO Face Detection', cv.WINDOW_NORMAL)
+    cv.moveWindow('OpenVINO Face Detection', 0, 0)
+    cv.resizeWindow('OpenVINO Face Detection', 700, 700)
+    cv.imshow('OpenVINO Face Detection', image)
