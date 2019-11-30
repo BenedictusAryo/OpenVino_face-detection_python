@@ -110,3 +110,24 @@ def age_class(age):
     Classify Age whether it's below or above 30
     """
     return 'Below 30' if age <= 30 else 'Above 30'
+
+#########################  Load Neural Network  #########################
+
+
+def load_model(plugin, model, weights):
+    """
+    Load OpenVino IR Models
+
+    Input:
+    Plugin = Hardware Accelerator
+    Model = model_xml file 
+    Weights = model_bin file
+
+    Output:
+    execution network (exec_net)
+    """
+    #  Read in Graph file (IR) to create network
+    net = IENetwork(model, weights)
+    # Load the Network using Plugin Device
+    exec_net = plugin.load(network=net)
+    return net, exec_net
