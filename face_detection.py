@@ -111,8 +111,8 @@ def age_class(age):
     """
     return 'Below 30' if age <= 30 else 'Above 30'
 
-#########################  Load Neural Network  #########################
 
+#########################  Load Neural Network  #########################
 
 def load_model(plugin, model, weights):
     """
@@ -131,3 +131,10 @@ def load_model(plugin, model, weights):
     # Load the Network using Plugin Device
     exec_net = plugin.load(network=net)
     return net, exec_net
+
+
+####################  Create Execution Network  #######################
+net_facedetect, exec_facedetect = load_model(
+    plugin, FACEDETECT_XML, FACEDETECT_BIN)
+net_ageGender, exec_ageGender = load_model(
+    plugin, AGEGENDER_XML, AGEGENDER_BIN)
