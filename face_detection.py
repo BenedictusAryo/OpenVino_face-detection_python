@@ -21,6 +21,7 @@ OpenVINO not found in your environment.
 
 After install OpenVINO:
 in Windows: run OPENVINO_DIR/bin/setupvars.bat before run this script.
+    eg: "C:\Program Files (x86)\IntelSWTools\openvino\bin\setupvars.bat"
 in Ubuntu: put this on your .bashrc files: 
     source /opt/intel/openvino/bin/setupvars.sh
            then run the script again.""")
@@ -38,7 +39,6 @@ args = parser.parse_args()
 
 #######################  DEVICE INITIALIZATION  ########################
 #  Plugin initialization for specified device and load extensions library if specified
-
 device = args.device.upper()
 
 # Device Options = "CPU", "GPU", "MYRIAD"
