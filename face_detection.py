@@ -13,7 +13,7 @@ import argparse
 import time
 
 try:
-    from openvino.inference_engine import IENetwork, IEPlugin
+    from openvino.inference_engine import IENetwork, IECore
     import cv2 as cv
 except:
     raise Exception("""
@@ -42,7 +42,7 @@ args = parser.parse_args()
 device = args.device.upper()
 
 # Device Options = "CPU", "GPU", "MYRIAD"
-plugin = IEPlugin(device=device)
+plugin = IECore()
 
 # DETECT OS WINDOWS / UBUNTU  TO USE EXTENSION LIBRARY
 # Plugin UBUNTU :
@@ -55,9 +55,10 @@ if platform.system() == 'Windows':
 else:
     cpu_plugin = LINUX_CPU_PLUGIN
 
+
 # Add Extension to Device Plugin
 if device == "CPU":
-    plugin.add_cpu_extension(cpu_plugin)
+    plugin.add_extension(cpu_plugin, device)
 
 #################### no need for GPU or MYRIAD ########################
 #######################################################################
