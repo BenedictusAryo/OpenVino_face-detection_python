@@ -57,8 +57,8 @@ else:
 
 
 # Add Extension to Device Plugin
-if device == "CPU":
-    plugin.add_extension(cpu_plugin, device)
+# if device == "CPU":
+#     plugin.add_extension(cpu_plugin, device)
 
 #################### no need for GPU or MYRIAD ########################
 #######################################################################
@@ -89,7 +89,7 @@ def image_preprocessing(image, n, c, h, w):
 #########################  LOAD NEURAL NETWORK  ########################
 
 
-def load_model(plugin, model, weights):
+def load_model(plugin, model, weights, device):
     """
     Load OpenVino IR Models
 
@@ -102,15 +102,15 @@ def load_model(plugin, model, weights):
     execution network (exec_net)
     """
     #  Read in Graph file (IR) to create network
-    net = IENetwork(model, weights)
+    net = plugin.read_network(model, weights)
     # Load the Network using Plugin Device
-    exec_net = plugin.load(network=net)
+    exec_net = plugin.load_network(network=net, device_name=device)
     return net, exec_net
 
 
 ####################  CREATE EXECUTION NETWORK  #######################
 net_facedetect, exec_facedetect = load_model(
-    plugin, FACEDETECT_XML, FACEDETECT_BIN)
+    plugin, FACEDETECT_XML, FACEDETECT_BIN, device)
 
 #################  OBTAIN INPUT & OUTPUT TENSOR  ######################
 # Face Detection Model
@@ -118,8 +118,7 @@ net_facedetect, exec_facedetect = load_model(
 FACEDETECT_INPUTKEYS = 'data'
 FACEDETECT_OUTPUTKEYS = 'detection_out'
 #  Obtain image_count, channels, height and width
-n_facedetect, c_facedetect, h_facedetect, w_facedetect = net_facedetect.inputs[
-    FACEDETECT_INPUTKEYS].shape
+n_facedetect, c_facedetect, h_facedetect, w_facedetect = net_facedetect.input_info[FACEDETECT_INPUTKEYS].input_data.shape
 
 
 #########################  READ VIDEO CAPTURE  ########################
