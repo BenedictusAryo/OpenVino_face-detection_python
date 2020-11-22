@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct  16 10:14:14 2019
-
+Last updated: 22 Nov 2020
 @author: benedict.aryo
 
 """
@@ -13,7 +13,7 @@ import argparse
 import time
 
 try:
-    from openvino.inference_engine import IENetwork, IECore
+    from openvino.inference_engine import IECore
     import cv2 as cv
 except:
     raise Exception("""
@@ -21,7 +21,7 @@ OpenVINO not found in your environment.
 
 After install OpenVINO:
 in Windows: run OPENVINO_DIR/bin/setupvars.bat before run this script.
-    eg: "C:\Program Files (x86)\IntelSWTools\openvino\bin\setupvars.bat"
+    eg: "C:\Program Files (x86)\Intel\openvino\bin\setupvars.bat"
 in Ubuntu: put this on your .bashrc files: 
     source /opt/intel/openvino/bin/setupvars.sh
            then run the script again.""")
@@ -38,12 +38,14 @@ parser.add_argument("-s", "--sample", default=False,
 args = parser.parse_args()
 
 #######################  DEVICE INITIALIZATION  ########################
-#  Plugin initialization for specified device and load extensions library if specified
+#  Device Used for inference
 device = args.device.upper()
 
 # Device Options = "CPU", "GPU", "MYRIAD"
 plugin = IECore()
 
+
+'''  (DEPRECATED) NO NEED TO INITIALIZE EXTENSION LIBRARY SINCE OPENVINO 2020/2021
 # DETECT OS WINDOWS / UBUNTU  TO USE EXTENSION LIBRARY
 # Plugin UBUNTU :
 LINUX_CPU_PLUGIN = "/opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_avx2.so"
@@ -62,6 +64,7 @@ else:
 
 #################### no need for GPU or MYRIAD ########################
 #######################################################################
+'''
 
 #######################  MODEL INITIALIZATION  ########################
 #  Prepare and load the models
@@ -94,7 +97,7 @@ def load_model(plugin, model, weights, device):
     Load OpenVino IR Models
 
     Input:
-    Plugin = Hardware Accelerator
+    Plugin = Hardware Accelerator IE Core
     Model = model_xml file 
     Weights = model_bin file
 
@@ -151,7 +154,7 @@ while cv.waitKey(1) != ord('q'):
 
     ######################## Get Inference Result  #########################
     status = req_handle.wait()
-    res = req_handle.outputs[FACEDETECT_OUTPUTKEYS]
+    res = req_handle.output_blobs[FACEDETECT_OUTPUTKEYS].buffer
 
     # Get Bounding Box Result
     for detection in res[0][0]:
