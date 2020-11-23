@@ -8,7 +8,12 @@ OpenVino (OpenVisual Inferencing and Neural Network Optimization) is toolkit to 
 https://software.intel.com/en-us/openvino-toolkit/choose-download
 
 ## Hardware Requirement
+*CPU:*
 * Minimum Intel gen6 processors
+* Some Ryzen series support but not all
+
+*GPU:*
+* Intel HD Graphics
 
 ## OpenVINO Installation Guide
 * Windows 10: https://docs.openvinotoolkit.org/latest/_docs_install_guides_installing_openvino_windows.html
@@ -22,3 +27,6 @@ then run `python3 face_detection.py`
 * Windows: run OpenVINO `setupvars.bat` first before run the script. _Example_: <br>
 `"C:\Program Files (x86)\IntelSWTools\openvino\bin\setupvars.bat"` <br>
 (_with " because it has space on the folder path_) then run `python face_detection.py`
+
+## Latest version tested:
+* openvino_2021.1.110
